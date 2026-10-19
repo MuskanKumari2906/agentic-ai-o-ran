@@ -1,0 +1,33 @@
+{
+ "summary": [
+  "**Verification, not self-critique, is what helps.** On 45 held-out configurations, verifier-grounded reflection (A5) was exactly right on 10 configurations where single-agent agentic RAG (A3) was wrong, and never the reverse (exact McNemar p = 0.002). LLM-only reflection (A4, the design of the closest published work) gave no resolved gain over A3 (2 vs 0, p = 0.5).",
+  "**The LLM critic adds little over the deterministic verifier.** The verifier alone (A6) was nearly as good as A5 (A5 vs A6: 2 vs 0 configurations, p = 0.5) at about two-thirds of the tokens. This matches hypothesis H3 of the proposal.",
+  "**Reflection mostly corrects rather than damages.** Across all parameters, A5 turned 80 verdicts from wrong to right and 8 from right to wrong; A4 turned 32 right and 20 wrong.",
+  "**A small local model over-flags.** Qwen2.5-7B without verification reported about five false violations per true one (precision 0.15). Grounded verification raised precision to 0.24-0.25 and doubled citation correctness (10% to 21-23%), at a cost in recall (0.96 to 0.64-0.72).",
+  "**A simple rule scanner remains competitive overall** (A0 F1 0.41 vs A6 0.38, A0 vs A5 not resolved, p = 0.39), but it cannot reason about deployment profiles: it never solved a decoy or a context-dependent file, while A5 solved 38% of decoys.",
+  "**Formal repair fixes what the LLM fixes badly.** Using the same confirmed findings, SMT minimal repair (A7) raised fix correctness from 24% to 35% and cut unnecessary changes on compliant files from 75% to 32%.",
+  "**In the network, wrong fixes cost more than missed findings.** In the closed-loop twin (3 seeds, 6 h each), arms that push LLM-written fixes (A3, A4) left gNBs non-compliant for longer than no agent at all (52 vs 40 site-hours), because incorrect fixes create new non-compliant configurations. The same A5 findings with SMT repair (A7) cut non-compliant site-hours to 25 and users displaced by fixes by 72% (892 vs 3193).",
+  "Absolute accuracy is low (best exact match 22%) because of the small model and the deliberately hard dataset; the evidence is in the paired differences, not the absolute levels."
+ ],
+ "e1": [
+  "Precision is the limiting factor for every LLM arm: A1-A3 produce 132-138 false violations against 23-24 true ones across 45 files, mostly on drb_integrity, integrity and ciphering lists. Retrieval (A2) and query generation (A3) did not change this with a 7B model.",
+  "The verifier's C4 applicability check removed most false positives; 78-84% of A5/A6 runs ended with at least one finding that could not be verified within three rounds and was dropped (escalation). The revision step itself rarely changed the model's answer, so the gain comes from filtering by checkable evidence rather than from the model learning from feedback.",
+  "Decoys and context pairs separate the arms: A0-A3 solved none, A5 solved 38% of decoys and 14% of context pairs. Vendor-default files (OAI sample values) were solved by no arm."
+ ],
+ "e4": [
+  "Every arm saw the same mobility, traffic, config drift and attacks within a seed (common random numbers, verified), so differences come from the agent. Values are means over seeds 11-13; per-seed values are in results/e4_twin.json.",
+  "Under the operator-hardened profile used here, the literal rule scanner (A0) minimised exposure (6 unciphered active UE-hours vs 311 with no agent) because almost every insecure literal value is also a violation in that profile. Its cost is about 20 unnecessary fix pushes per 6 hours on compliant gNBs.",
+  "Verifier-grounded arms reduced successful RRC injection attacks by about 40% compared with A3 (1399 vs 2313) but, with lower recall, left more null-ciphered traffic than A3 (149 vs 96 UE-hours).",
+  "Fix quality dominates network outcomes: A3 and A4 increased non-compliant site-hours above the no-agent baseline, while A7, using the same findings as A5 but SMT repair, achieved the lowest non-compliance of any LLM arm with 10 pushes and almost no unnecessary ones.",
+  "Remediation timing inside the twin: the maintenance-window policy pushed almost nothing in a 16:00-22:00 run, so its exposure matched no agent; the RL scheduler matched immediate remediation on exposure with 8% fewer users displaced (2950 vs 3193). Over a 6-hour evening window the scheduling effect is small; E6 shows it over full 24-hour cycles."
+ ],
+ "e5": [
+  "User-plane integrity protection costs 0.29 percentage points of total goodput and raises VoIP header overhead from 6.5% to 9.9% (4-byte MAC-I on small packets), with 0.05 ms added latency. In this model the performance argument for leaving UP integrity off is weak; the cost concentrates on small-packet traffic."
+ ],
+ "e6": [
+  "Over 200 paired 24-hour episodes the learned PPO scheduler beat the best hand-written rule (severity threshold) by 11.5 reward units (95% CI 8.3-14.9; better in 74% of episodes), mainly by deferring low-severity fixes to off-peak hours while fixing high-severity issues immediately. A pure maintenance-window policy is unacceptable when severe violations appear (exposure two orders of magnitude higher)."
+ ],
+ "ns3": [
+  "The twin's median SINR (3.9 dB) lies within 0.7-1.7 dB of ns-3 5G-LENA on the same layout, which supports its use for relative comparisons. The tails differ: ns-3's beamforming arrays reach higher SINR, and ns-3 shows a low-SINR tail of unresolved origin. Absolute radio KPIs from the twin are therefore indicative only."
+ ]
+}

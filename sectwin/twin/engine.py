@@ -106,6 +106,7 @@ class Twin:
     def __init__(self, cfg: ScenarioConfig, dataset: list[dict] | None = None, agent=None, policy=None):
         self.cfg = cfg
         self.rng = np.random.default_rng(cfg.seed)
+        self.ev_rng = np.random.default_rng([cfg.seed, 99])      # config-change events only
         self.profile = Profile(**cfg.profile)
         self.t = 0.0
         self.tick = 0
@@ -174,7 +175,8 @@ class Twin:
                         outage_ue_s=0.0, denied_ue_s=0.0, handovers=0, downgrades_at_ho=0, rlf=0,
                         drift_events=0, malicious_injections=0, pushes=0, unnecessary_pushes=0,
                         missed=0, detections=0, noncompliant_site_s=0.0, lat_samples=[], ttd=[], ttr=[],
-                        served_app=np.zeros(6), goodput_app=np.zeros(6))
+                        served_app=np.zeros(6), goodput_app=np.zeros(6),
+                        remediation_reselections=0, remediation_ue_s=0.0)
         self.tele_cells: list[list] = []
         self.tele_sites: list[list] = []
         self.tele_net: list[dict] = []
@@ -440,21 +442,24 @@ class Twin:
                 if str(s.iface.get("n3_protection")) == "none":
                     self.acc["bits_intercepted"] += float(served[site_of == a.site].sum())
             elif a.kind == "o1_mitm":
+                u = self.ev_rng.random(len(self.sites))      # fixed number of draws per tick
                 for s in self.sites:
-                    if str(s.iface.get("o1_transport")) == "netconf_plain" and \
-                            self.rng.random() < a.rate_per_hour * dt / 3600.0:
+                    if str(s.iface.get("o1_transport")) == "netconf_plain" and u[s.idx] < a.rate_per_hour * dt / 3600.0:
                         self._inject_config(s, malicious=True)
 
     # ================================================================= drift
-    def _pick_item(self, noncompliant_only=False):
+    def _pick_item(self, noncompliant_only=False, key=0):
+        """Deterministic per (seed, tick, key) so every arm sees the same event sequence
+        (common random numbers), independent of what the agent did earlier."""
         pool = self.pool or self.dataset
         if noncompliant_only:
             p2 = [d for d in pool if not d["summary"]["compliant"]]
             pool = p2 or pool
-        return pool[int(self.rng.integers(len(pool)))] if pool else None
+        g = np.random.default_rng([self.cfg.seed, self.tick, key, 7])
+        return pool[int(g.integers(len(pool)))] if pool else None
 
     def _inject_config(self, site: Site, malicious=False):
-        it = self._pick_item(noncompliant_only=malicious)
+        it = self._pick_item(noncompliant_only=malicious, key=site.idx * 2 + int(malicious))
         if it is None:
             return
         site.text = render(site.ident, SecuritySettings(**it["settings"]))
@@ -473,8 +478,9 @@ class Twin:
 
     def _drift(self, dt):
         lam = self.cfg.drift_rate_per_site_hour * dt / 3600.0
+        u = self.ev_rng.random(len(self.sites))
         for s in self.sites:
-            if self.rng.random() < lam:
+            if u[s.idx] < lam:
                 self._inject_config(s)
 
     # ================================================================= remediation
@@ -501,6 +507,9 @@ class Twin:
         algo = any(k in fixes for k in ("ciphering_algorithms", "integrity_algorithms", "drb_ciphering", "drb_integrity"))
         outage = self.cfg.outage_algo_s if algo else self.cfg.outage_iface_s
         s.outage_until = self.t + outage
+        on_site = int(((self.serving >= 0) & (self.radio.cell_site[np.maximum(self.serving, 0)] == site_idx)).sum())
+        self.acc["remediation_reselections"] += on_site      # UEs forced off the gNB while it restarts
+        self.acc["remediation_ue_s"] += on_site * outage
         s.text = new_text
         s.item_id = None
         s.approved_hash = hash(new_text)
@@ -592,6 +601,8 @@ class Twin:
             "attack_success_rate": round(a["attack_success"] / max(a["attack_attempts"], 1), 4),
             "attach_fail_ue_hours": round(a["attach_fail_ue_s"] / 3600, 3),
             "remediation_outage_ue_hours": round(a["outage_ue_s"] / 3600, 3),
+            "remediation_reselections": a["remediation_reselections"],
+            "remediation_displaced_ue_hours": round(a["remediation_ue_s"] / 3600, 3),
             "denied_ue_hours": round(a["denied_ue_s"] / 3600, 3),
             "handovers": a["handovers"], "downgrades_at_handover": a["downgrades_at_ho"], "rlf": a["rlf"],
             "drift_events": a["drift_events"], "malicious_injections": a["malicious_injections"],

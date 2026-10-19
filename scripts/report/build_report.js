@@ -179,10 +179,17 @@ if (E5) {
 }
 if (E4) {
   body.push(H2("5.2 E4: closed loop, compliance agent inside the network"));
-  body.push(table(["Arm", "Unciph. UE-h", "Spoofable UE-h", "GB intercepted", "Attacks succeeded", "MTTR (s)", "Pushes (unneeded)", "Outage UE-h", "Left to audit"],
-    Object.entries(E4.arms).map(([a, r]) => [a, r.unciphered_active_ue_hours, r.spoofable_ue_hours, r.gb_intercepted, r.attack_success, r.mttr_s ?? "-", `${r.pushes} (${r.unnecessary_pushes})`, r.remediation_outage_ue_hours, r.missed_until_audit]),
-    [700, 1050, 1100, 1050, 1050, 900, 1200, 1000, 976]));
-  body.push(Cap(`Table 10. ${E4.hours} simulated hours per arm with an identical seed (same mobility, traffic, drift and attacks). Agent outcomes and latencies are replayed from E1 measurements.`));
+  const r1 = (x) => (x === null || x === undefined ? "-" : Number(x).toFixed(1));
+  body.push(table(["Arm", "Unciph. UE-h", "Spoofable UE-h", "GB intercepted", "Attacks succeeded", "Non-compl. site-h", "Pushes (unneeded)", "UEs displaced by fixes"],
+    Object.entries(E4.arms).map(([a, r]) => [a, r1(r.unciphered_active_ue_hours), r1(r.spoofable_ue_hours), r1(r.gb_intercepted), r1(r.attack_success), r1(r.noncompliant_site_hours), `${r1(r.pushes)} (${r1(r.unnecessary_pushes)})`, r1(r.remediation_reselections)]),
+    [700, 1100, 1150, 1100, 1150, 1250, 1300, 1276]));
+  body.push(Cap(`Table 10. Mean over seeds ${(E4.seeds || []).join(", ")}; ${E4.hours} simulated hours per run. Within a seed every arm sees the same mobility, traffic, drift and attacks; agent outcomes and latencies are replayed from E1 measurements.`));
+  if (E4.policies && Object.keys(E4.policies).length) {
+    body.push(table(["Remediation policy (A5)", "Unciph. UE-h", "Spoofable UE-h", "Attacks succeeded", "UEs displaced by fixes"],
+      Object.entries(E4.policies).filter(([, r]) => r).map(([k, r]) => [k, r1(r.unciphered_active_ue_hours), r1(r.spoofable_ue_hours), r1(r.attack_success), r1(r.remediation_reselections)]),
+      [2600, 1600, 1600, 1600, 1626]));
+    body.push(Cap("Table 11. Remediation timing inside the twin, same seeds."));
+  }
   const f = img("e4_closed_loop.png", 620, 180); if (f) { body.push(f); body.push(Cap("Figure 4. Exposure and disruption per arm.")); }
   const g = img("e4_timeline.png", 520, 194); if (g) { body.push(g); body.push(Cap("Figure 5. Active UEs on an unciphered user plane over time.")); }
   (NARR.e4 || []).forEach((t) => body.push(P(t)));
@@ -195,7 +202,7 @@ if (E6) {
     body.push(table(["PPO compared with", "Mean reward gain", "95% CI", "PPO better in"],
       Object.entries(E6.paired_vs_ppo).map(([k, v]) => [k, fx(v.mean_reward_gain, 1), `[${fx(v.ci95[0], 1)}, ${fx(v.ci95[1], 1)}]`, pct(v.ppo_better_share, 0)]), [2800, 2000, 2200, 2026]));
   }
-  body.push(Cap(`Table 11. ${E6.episodes || 200} paired 24-hour episodes. ${E6.note || ""}`));
+  body.push(Cap(`Table 12. ${E6.episodes || 200} paired 24-hour episodes. ${E6.note || ""}`));
   const f = img("e6_rl.png", 560, 185); if (f) { body.push(f); body.push(Cap("Figure 6. Exposure and disruption by remediation policy.")); }
   (NARR.e6 || []).forEach((t) => body.push(P(t)));
 }

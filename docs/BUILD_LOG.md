@@ -107,3 +107,19 @@ Problems found in smoke tests and fixed:
   using the `3gpp-outdoor-calibration` example (UMa, 19 sites).
 - Incident: experiment throughput dropped ~3x because the dashboard demo twin kept making live LLM calls
   and the ns-3 compile saturated the CPU. Demo twin stopped; compile reniced to 19.
+
+## Entry 7: results night (21:00-01:40)
+
+- **ns-3 cross-check** (ns-3.48 + 5G-LENA v5.1 in WSL, `cttc-nr-3gpp-calibration-user`): median per-UE SINR
+  twin 3.9 dB vs ns-3 4.6 dB (default) / 5.6 dB (attach to closest). ns-3 has higher upper tail (beamforming
+  arrays) and an unexplained low tail in every configuration; a 1x1 omni run was not like-for-like (no
+  sectorisation). Recorded as an open item.
+- **E1 repeat 0 complete** (360 runs). A5 vs A3 exact-match 10/0 (p = 0.002), A6 vs A3 8/0 (p = 0.008), A5 vs
+  A4 8/0 (p = 0.008); A4 vs A3 and A5 vs A6 not resolved. Precision 0.15 -> 0.25 with verification; A0 F1 0.41.
+- **E4 bug found and fixed:** the first E4 run was invalid because the O1 attacker's random draws depended on
+  agent actions, so arms saw different drift/attack sequences. Events now use a separate stream and a
+  per-(seed, tick, site) generator (verified by `scripts/crn_check.py`); disruption counted as UEs displaced
+  by fixes. Re-run with seeds 11-13 in parallel.
+- **E4 result:** LLM-written fixes (A3/A4) leave gNBs non-compliant longer than no agent (52 vs 40 site-h);
+  A7 (SMT repair) lowest LLM-arm non-compliance (25 site-h) and 72% fewer users displaced than A5.
+- Repository: all work committed as MuskanKumari2906 and pushed to MuskanKumari2906/agentic-ai-o-ran.

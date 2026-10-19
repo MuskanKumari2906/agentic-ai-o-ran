@@ -64,11 +64,11 @@ def main():
     e4 = s.get("e4")
     if e4:
         L += ["", f"## E4. Closed loop in the twin ({e4['hours']} h, identical seed per arm)", "",
-              "| Arm | unciphered active UE-h | spoofable UE-h | GB intercepted | RRC attacks succeeded | MTTD s | MTTR s | pushes | unneeded pushes | outage UE-h | left to audit |",
+              "| Arm | unciphered active UE-h | spoofable UE-h | GB intercepted | RRC attacks succeeded | MTTD s | MTTR s | pushes | unneeded pushes | UEs displaced by fixes | left to audit |",
               "|---|---|---|---|---|---|---|---|---|---|---|"]
         for a, r in e4["arms"].items():
             L.append(f"| {a} | {r['unciphered_active_ue_hours']} | {r['spoofable_ue_hours']} | {r['gb_intercepted']} | {r['attack_success']} | "
-                     f"{r['mttd_s']} | {r['mttr_s']} | {r['pushes']} | {r['unnecessary_pushes']} | {r['remediation_outage_ue_hours']} | {r['missed_until_audit']} |")
+                     f"{r['mttd_s']} | {r['mttr_s']} | {r['pushes']} | {r['unnecessary_pushes']} | {r.get('remediation_reselections')} | {r['missed_until_audit']} |")
         if e4.get("policies"):
             L += ["", "Remediation policy (A5):", "", "| Policy | unciphered UE-h | spoofable UE-h | attacks succeeded | outage UE-h |", "|---|---|---|---|---|"]
             for k, r in e4["policies"].items():

@@ -91,12 +91,16 @@ def fig_e4(e4):
     fig, ax = plt.subplots(1, 3, figsize=(10, 2.9))
     keys = [("unciphered_active_ue_hours", "unciphered active UE-hours", AMBER),
             ("spoofable_ue_hours", "UE-hours with RRC on NIA0", RED),
-            ("remediation_outage_ue_hours", "outage caused by fixes (UE-h)", GREY)]
+            ("remediation_reselections", "UEs displaced by fixes", GREY)]
     for i, (k, t, c) in enumerate(keys):
-        ax[i].bar(range(len(a)), [arms[x][k] for x in a], color=c)
+        vals = [arms[x][k] or 0 for x in a]
+        ax[i].bar(range(len(a)), vals, color=c)
+        for j, x in enumerate(a):
+            seeds = arms[x].get(k + "_seeds") or []
+            ax[i].scatter([j] * len(seeds), seeds, color="#1c232b", s=6, zorder=3)
         ax[i].set_xticks(range(len(a)), a)
         ax[i].set_title(t, loc="left", fontsize=9)
-    fig.suptitle(f"E4: closed loop in the twin ({e4['hours']} h, identical seed per arm)", x=0.01, ha="left", fontsize=9.5)
+    fig.suptitle(f"E4: closed loop in the twin ({e4['hours']} h per run; bars = mean, dots = seeds)", x=0.01, ha="left", fontsize=9.5)
     fig.tight_layout()
     fig.savefig(OUT / "e4_closed_loop.png")
     plt.close(fig)

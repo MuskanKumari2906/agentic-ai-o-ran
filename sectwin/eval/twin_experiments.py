@@ -66,9 +66,9 @@ def e5(minutes=20):
     return out
 
 
-def _scenario(arm_policy_seed=3):
+def _scenario(seed=3):
     return ScenarioConfig(
-        n_sites=19, n_ues=1500, start_hour=16.0, seed=arm_policy_seed,
+        n_sites=19, n_ues=1500, start_hour=16.0, seed=seed,
         profile={"emergency_unauth_supported": True, "baseline": "operator_hardened"},
         drift_rate_per_site_hour=0.5, approval_delay_s=120.0, audit_interval_h=24.0,
         attackers=[{"kind": "sniffer", "x": 0, "y": 0, "radius": 380},
@@ -76,8 +76,8 @@ def _scenario(arm_policy_seed=3):
                    {"kind": "o1_mitm", "rate_per_hour": 1.0}])
 
 
-def run_closed_loop(arm: str | None, policy: str, hours: float, data, replay):
-    cfg = _scenario()
+def run_closed_loop(arm: str | None, policy: str, hours: float, data, replay, seed=3):
+    cfg = _scenario(seed)
     agent = None if arm is None else ComplianceService(arm, mode="replay", replay=replay, pipeline=None,
                                                        approval_delay_s=cfg.approval_delay_s)
     pol = {"immediate": ImmediatePolicy(), "window": WindowPolicy(), "none": NoRemediation()}.get(policy)
@@ -90,7 +90,7 @@ def run_closed_loop(arm: str | None, policy: str, hours: float, data, replay):
         tw.step()
     s = tw.summary()
     s["wall_s"] = round(time.time() - t0, 1)
-    tw.export(ROOT / "data" / "telemetry" / f"e4_{arm or 'none'}_{policy}")
+    tw.export(ROOT / "data" / "telemetry" / f"e4_{arm or 'none'}_{policy}_s{seed}")
     if agent is not None:
         h = agent.history
         s["assessments"] = len(h)
@@ -131,7 +131,76 @@ def e4(hours=6.0, arms=("none", "A0", "A3", "A4", "A5", "A6", "A7"), policies=("
     return out
 
 
+def _replay_with_a7():
+    replay = load_replay()
+    from ..eval.analyze import _load, derive_a7, _dataset
+    for r in derive_a7(_load("e1_runs.jsonl"), _dataset()):
+        replay.setdefault(("A7", r["config_id"]), []).append(
+            {"pred": r["predicted_violations"], "fixes": r["fixes"], "seconds": r["seconds"], "escalated": r.get("escalated")})
+    return replay
+
+
+def e4_seed(seed: int, hours=6.0, arms=("none", "A0", "A3", "A4", "A5", "A6", "A7"), policies=("window", "rl")):
+    """One seed of E4; writes results/e4_seed{seed}.json. Seeds run in parallel processes."""
+    data = [d for d in json.load(open(ROOT / "data" / "dataset.json", encoding="utf-8")) if d["split"] == "test"]
+    replay = _replay_with_a7()
+    out = {"seed": seed, "hours": hours, "arms": {}, "policies": {}, "series": {}}
+    path = RES / f"e4_seed{seed}.json"
+    for arm in arms:
+        s, tele = run_closed_loop(None if arm == "none" else arm, "immediate" if arm != "none" else "none",
+                                  hours, data, replay, seed)
+        out["arms"][arm] = s
+        out["series"][arm] = [{k: r[k] for k in ("t", "unciphered", "spoofable", "noncompliant_sites", "attack_success")}
+                              for r in tele[::6]]
+        print(seed, arm, {k: s[k] for k in ("unciphered_active_ue_hours", "spoofable_ue_hours", "attack_success",
+                                             "noncompliant_site_hours", "pushes", "unnecessary_pushes",
+                                             "remediation_reselections")}, flush=True)
+        path.write_text(json.dumps(out, indent=1, default=float))
+    for pol in policies:
+        s, _ = run_closed_loop("A5", pol, hours, data, replay, seed)
+        out["policies"][pol] = s
+        print(seed, "A5/" + pol, {k: s[k] for k in ("unciphered_active_ue_hours", "spoofable_ue_hours",
+                                                    "attack_success", "remediation_reselections")}, flush=True)
+        path.write_text(json.dumps(out, indent=1, default=float))
+    out["policies"]["immediate"] = out["arms"].get("A5")
+    path.write_text(json.dumps(out, indent=1, default=float))
+
+
+def e4_merge():
+    """Average per-seed E4 files into results/e4_twin.json (mean plus per-seed values)."""
+    runs = [json.loads(f.read_text()) for f in sorted(RES.glob("e4_seed*.json"))]
+    keys = ["unciphered_active_ue_hours", "spoofable_ue_hours", "gb_intercepted", "attack_success", "mttd_s", "mttr_s",
+            "pushes", "unnecessary_pushes", "remediation_reselections", "remediation_displaced_ue_hours",
+            "missed_until_audit", "noncompliant_site_hours", "throughput_gbps_mean", "latency_p95_ms"]
+
+    def avg(dicts):
+        o = {}
+        for k in keys:
+            vals = [d.get(k) for d in dicts if d.get(k) is not None]
+            o[k] = round(float(np.mean(vals)), 3) if vals else None
+            o[k + "_seeds"] = vals
+        o["remediation_outage_ue_hours"] = o["remediation_displaced_ue_hours"]
+        return o
+
+    arms = {a: avg([r["arms"][a] for r in runs if a in r["arms"]]) for a in runs[0]["arms"]}
+    pols = {p: avg([r["policies"][p] for r in runs if r["policies"].get(p)]) for p in runs[0]["policies"]}
+    out = {"hours": runs[0]["hours"], "seeds": [r["seed"] for r in runs], "arms": arms, "policies": pols,
+           "series": runs[0]["series"],
+           "note": "Mean over seeds. Within a seed every arm sees the same mobility, traffic, config-drift and attack "
+                   "sequence (common random numbers). Agent outcome and latency per configuration are replayed from "
+                   "E1 measurements; configurations without a measured run are left to the 24 h manual audit."}
+    (RES / "e4_twin.json").write_text(json.dumps(out, indent=1, default=float))
+    return out
+
+
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "e4seed":
+        e4_seed(int(sys.argv[2]), float(sys.argv[3]) if len(sys.argv) > 3 else 6.0)
+        sys.exit(0)
+    if len(sys.argv) > 1 and sys.argv[1] == "e4merge":
+        m = e4_merge()
+        print(json.dumps({a: {k: v for k, v in r.items() if not k.endswith("_seeds")} for a, r in m["arms"].items()}, indent=1))
+        sys.exit(0)
     which = sys.argv[1] if len(sys.argv) > 1 else "e5"
     if which == "e5":
         e5()
