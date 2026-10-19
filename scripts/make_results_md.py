@@ -94,9 +94,12 @@ def main():
     ns3 = ROOT / "results" / "ns3_validation.json"
     if ns3.exists():
         v = json.loads(ns3.read_text())
-        L += ["", "## Twin vs ns-3 5G-LENA (radio calibration)", "", "| Quantity | twin | ns-3 5G-LENA |", "|---|---|---|"]
+        keys = list(v["sinr"])
+        L += ["", "## Twin vs ns-3 5G-LENA (radio cross-check)", "", "| Quantity | " + " | ".join(keys) + " |",
+              "|---" * (len(keys) + 1) + "|"]
         for k, row in v["rows"].items():
-            L.append(f"| {k} | {row['twin']} | {row['ns3']} |")
+            L.append(f"| {k} | " + " | ".join(str(row.get(c, "-")) for c in keys) + " |")
+        L += [""] + [f"- {n}" for n in v.get("notes", [])]
     (ROOT / "docs" / "RESULTS_TABLES.md").write_text("\n".join(L) + "\n", encoding="utf-8")
     print("written docs/RESULTS_TABLES.md")
 

@@ -133,15 +133,19 @@ def fig_e6(e6):
 
 
 def fig_ns3(v):
-    fig, ax = plt.subplots(figsize=(4.8, 3.0))
-    for k, c in (("twin", BLUE), ("ns3", RED)):
-        x = np.sort(np.array(v["sinr"][k]))
-        ax.plot(x, np.arange(1, len(x) + 1) / len(x), color=c, lw=1.3,
-                label="SecTwin" if k == "twin" else "ns-3 5G-LENA")
-    ax.set_xlabel("downlink SINR (dB)")
+    fig, ax = plt.subplots(figsize=(5.2, 3.1))
+    style = {"twin": (BLUE, "-", "SecTwin"), "ns3_default": (RED, "-", "ns-3 5G-LENA (default arrays, BF, fading)"),
+             "ns3_matched": (GREY, "--", "ns-3 1x1 omni (not sectorised)"),
+             "ns3_closest": (AMBER, "-", "ns-3 default, attach to closest")}
+    for k, arr in v["sinr"].items():
+        c, ls, lab = style.get(k, (AMBER, ":", k))
+        x = np.sort(np.array(arr))
+        ax.plot(x, np.arange(1, len(x) + 1) / len(x), color=c, ls=ls, lw=1.3, label=lab)
+    ax.set_xlim(-35, 40)
+    ax.set_xlabel("downlink SINR per UE (dB)")
     ax.set_ylabel("CDF")
-    ax.legend(frameon=False)
-    ax.set_title("Radio calibration: 19 sites, UMa, 500 m ISD, full load", loc="left", fontsize=9)
+    ax.legend(frameon=False, fontsize=7.5, loc="lower right")
+    ax.set_title("Radio cross-check: 19 sites, UMa, 500 m ISD, full load", loc="left", fontsize=9)
     fig.tight_layout()
     fig.savefig(OUT / "ns3_sinr_cdf.png")
     plt.close(fig)

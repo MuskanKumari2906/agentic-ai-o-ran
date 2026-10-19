@@ -161,9 +161,13 @@ body.push(table(["Aspect", "Model"], [
 ], [1900, 7126]));
 body.push(Cap("Table 7. Twin model summary (system-level simulator, not a protocol stack)."));
 if (NS3) {
-  const f = img("ns3_sinr_cdf.png", 380, 238); if (f) { body.push(f); body.push(Cap("Figure 3. Downlink SINR distribution of the twin against ns-3 5G-LENA (3GPP calibration example) on the same layout.")); }
-  body.push(table(["Quantity", "SecTwin", "ns-3 5G-LENA"], Object.entries(NS3.rows).map(([k, r]) => [k, r.twin, r.ns3]), [4000, 2513, 2513]));
-  body.push(Cap("Table 8. Radio calibration against ns-3 5G-LENA."));
+  const f = img("ns3_sinr_cdf.png", 420, 250); if (f) { body.push(f); body.push(Cap("Figure 3. Downlink SINR distribution of the twin against ns-3 5G-LENA (3GPP calibration example) on the same layout.")); }
+  const keys = Object.keys(NS3.sinr);
+  const lab = { twin: "SecTwin", ns3_default: "ns-3 default", ns3_matched: "ns-3 1x1 omni", ns3_closest: "ns-3 closest" };
+  const wq = Math.floor((9026 - 3000) / keys.length);
+  body.push(table(["Quantity", ...keys.map((k) => lab[k] || k)], Object.entries(NS3.rows).map(([k, r]) => [k, ...keys.map((c) => r[c] ?? "-")]), [3000, ...keys.map(() => wq)]));
+  body.push(Cap("Table 8. Radio cross-check against ns-3 5G-LENA (3GPP outdoor calibration example)."));
+  (NS3.notes || []).forEach((t) => body.push(B(t)));
   (NARR.ns3 || []).forEach((t) => body.push(P(t)));
 }
 if (E5) {
