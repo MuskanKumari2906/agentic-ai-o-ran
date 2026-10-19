@@ -1,0 +1,51 @@
+{
+ "decoy": {
+  "n": 10,
+  "dev": 2,
+  "test": 8,
+  "noncompliant": 0,
+  "violations": 0
+ },
+ "clean": {
+  "n": 7,
+  "dev": 0,
+  "test": 7,
+  "noncompliant": 0,
+  "violations": 0
+ },
+ "vendor_default": {
+  "n": 5,
+  "dev": 2,
+  "test": 3,
+  "noncompliant": 4,
+  "violations": 5
+ },
+ "multi": {
+  "n": 12,
+  "dev": 4,
+  "test": 8,
+  "noncompliant": 8,
+  "violations": 14
+ },
+ "single": {
+  "n": 14,
+  "dev": 6,
+  "test": 8,
+  "noncompliant": 10,
+  "violations": 10
+ },
+ "noise": {
+  "n": 6,
+  "dev": 2,
+  "test": 4,
+  "noncompliant": 1,
+  "violations": 1
+ },
+ "context": {
+  "n": 8,
+  "dev": 1,
+  "test": 7,
+  "noncompliant": 4,
+  "violations": 7
+ }
+}
