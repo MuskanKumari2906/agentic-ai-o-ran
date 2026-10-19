@@ -1,0 +1,51 @@
+{
+ "rows": [
+  {
+   "name": "Baseline (UP integrity off, N3 IPsec)",
+   "goodput_ratio": 0.99491,
+   "voip_overhead": 0.06542056074766134,
+   "latency_p50_ms": 5.9,
+   "latency_p95_ms": 65.9,
+   "latency_p99_ms": 286.48,
+   "throughput_gbps": 2.9436
+  },
+  {
+   "name": "UP integrity on",
+   "goodput_ratio": 0.99202,
+   "voip_overhead": 0.09909909909909997,
+   "latency_p50_ms": 5.95,
+   "latency_p95_ms": 65.95,
+   "latency_p99_ms": 286.53,
+   "throughput_gbps": 2.9436
+  },
+  {
+   "name": "N3 IPsec off",
+   "goodput_ratio": 0.99491,
+   "voip_overhead": 0.06542056074766134,
+   "latency_p50_ms": 5.8,
+   "latency_p95_ms": 65.8,
+   "latency_p99_ms": 286.38,
+   "throughput_gbps": 2.9436
+  },
+  {
+   "name": "VoIP-heavy, UP integrity off",
+   "goodput_ratio": 0.99457,
+   "voip_overhead": 0.06542056074766245,
+   "latency_p50_ms": 5.9,
+   "latency_p95_ms": 5.9,
+   "latency_p99_ms": 65.9,
+   "throughput_gbps": 1.3718
+  },
+  {
+   "name": "VoIP-heavy, UP integrity on",
+   "goodput_ratio": 0.99152,
+   "voip_overhead": 0.0990990990990992,
+   "latency_p50_ms": 5.95,
+   "latency_p95_ms": 5.95,
+   "latency_p99_ms": 65.95,
+   "throughput_gbps": 1.3718
+  }
+ ],
+ "minutes": 20,
+ "note": "Busy hour (19:00), 19 sites, 1500 UEs. Integrity overhead = 4-byte MAC-I per PDCP PDU plus 0.05 ms processing; IPsec = 0.1 ms per packet. Ciphering cost is not modelled."
+}

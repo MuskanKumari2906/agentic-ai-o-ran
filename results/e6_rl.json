@@ -1,0 +1,62 @@
+{
+ "policies": {
+  "immediate": {
+   "reward": -169.32203252910844,
+   "exposure_ue_h": 0.44941486803220043,
+   "disruption_ue_h": 6.754904706443049,
+   "pushes": 26.97,
+   "reward_std": 40.89421598672976
+  },
+  "maintenance window": {
+   "reward": -3206.354944343943,
+   "exposure_ue_h": 3162.2326516346566,
+   "disruption_ue_h": 1.764891708371468,
+   "pushes": 13.83,
+   "reward_std": 1659.5053548099977
+  },
+  "severity threshold": {
+   "reward": -149.55764238423305,
+   "exposure_ue_h": 26.474574367841125,
+   "disruption_ue_h": 4.923322720655676,
+   "pushes": 23.685,
+   "reward_std": 39.421931880364674
+  },
+  "PPO (learned)": {
+   "reward": -138.0172332803787,
+   "exposure_ue_h": 16.28320126927986,
+   "disruption_ue_h": 4.869361280443952,
+   "pushes": 21.6,
+   "reward_std": 38.5157449871262
+  }
+ },
+ "train_steps": 400000,
+ "train_seconds": 142.2,
+ "episodes": 200,
+ "note": "Remediation-scheduling environment calibrated from the twin (users per site, diurnal load, outage durations). Severity weights are a stated modelling choice. Paired evaluation on 200 identical episodes; reward gain CI by bootstrap.",
+ "paired_vs_ppo": {
+  "immediate": {
+   "mean_reward_gain": 31.30479924872977,
+   "ci95": [
+    29.491455565106357,
+    33.071605872518354
+   ],
+   "ppo_better_share": 0.975
+  },
+  "maintenance window": {
+   "mean_reward_gain": 3068.3377110635643,
+   "ci95": [
+    2854.4520457040253,
+    3302.995395827872
+   ],
+   "ppo_better_share": 1.0
+  },
+  "severity threshold": {
+   "mean_reward_gain": 11.540409103854365,
+   "ci95": [
+    8.280184838802452,
+    14.892655829400402
+   ],
+   "ppo_better_share": 0.735
+  }
+ }
+}
