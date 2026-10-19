@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+
+# Node / UI builds
+node_modules/
+ui/dist/
+
+# Local runtime state (LLM response cache, logs, renders, scratch)
+runs/*
+!runs/rl_remediation_ppo.zip
+
+# Large regenerable telemetry exports
+data/telemetry/
+
+# Local tool settings
+.claude/
+*.tsbuildinfo
