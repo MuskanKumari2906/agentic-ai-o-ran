@@ -136,3 +136,16 @@ Problems found in smoke tests and fixed:
 - E2: comment prompt injection had no effect; harmless rewrites change LLM verdicts on 17-75% of files.
 - E3: provenance check stops tampered-clause citations (A3/A4 3 each, A5 0) and fails closed.
 - Final report: docs/SecTwin_Implementation_Report.docx and .pdf (9 pages).
+
+## Entry 9: portable demo (20 Oct, morning)
+
+- LLM backend selection (`sectwin/agents/backend.py`): GPU + Ollama -> API key (Anthropic SDK, or any
+  OpenAI-compatible endpoint) -> Ollama on CPU -> replay. Retrieval falls back to BM25 when no embedding
+  model is available. The dashboard shows the active backend; "Run live" explains when none is available.
+- One-click `setup.bat` / `run_demo.bat` (Windows) and `run_demo.sh`; light `requirements.txt` for the demo,
+  `requirements-research.txt` (PyTorch, RL, plotting) only for re-running experiments; prebuilt `ui/dist`
+  committed so Node.js is not needed. The RL option degrades to immediate remediation without the extras.
+- Fresh-clone test (new venv, clean Python 3.13, no LLM reachable) found that a clean install lacked
+  WebSocket support, so the live map never appeared; fixed with `uvicorn[standard]`. Re-test passed: map
+  streams, recorded assessments replay, fixes are pushed.
+- New docs: `docs/HOW_TO_DEMO.md` (plain-language explanation + click-by-click demo + Q&A), `docs/INSTALL.md`.

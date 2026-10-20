@@ -485,6 +485,7 @@ const EVT: Record<string, [string, string]> = {
   config_change: ["CONFIG CHANGE", "warn"], assessment_started: ["ASSESSING", "info"], assessment_done: ["ASSESSED", "info"],
   remediation_push: ["FIX PUSHED", "ok"], rrc_injection_success: ["RRC INJECTION", "crit"], downgrade_at_handover: ["HO DOWNGRADE", "crit"],
   manual_audit_fix: ["AUDIT FIX", "mute"], escalated_to_human: ["ESCALATED", "warn"], assessment_skipped: ["NOT ASSESSABLE", "mute"],
+  notice: ["NOTICE", "warn"],
 };
 
 function EventLog({ events, sites }: any) {

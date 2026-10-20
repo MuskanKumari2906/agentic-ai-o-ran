@@ -1,6 +1,6 @@
 # Demo install: dashboard, digital twin, recorded results. No GPU and no LLM needed.
 fastapi>=0.110
-uvicorn>=0.29
+uvicorn[standard]>=0.29   # [standard] adds WebSocket support for the live map
 httpx>=0.27
 pydantic>=2.6
 numpy>=1.26
