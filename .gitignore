@@ -4,7 +4,7 @@ __pycache__/
 
 # Node / UI builds
 node_modules/
-ui/dist/
+# ui/dist is committed so the demo needs no Node.js
 
 # Local runtime state (LLM response cache, logs, renders, scratch)
 runs/*

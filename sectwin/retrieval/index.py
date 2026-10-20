@@ -53,7 +53,12 @@ class ClauseIndex:
         self.use_dense = use_dense
         self.emb = None
         if use_dense:
-            self.emb = embed([DOC_PREFIX + d for d in docs])
+            try:
+                self.emb = embed([DOC_PREFIX + d for d in docs])
+            except Exception:
+                # no local embedding model (API-only or replay setups): keyword channel only
+                self.use_dense = False
+                self.emb = None
 
     def search(self, query: str, k: int = 5, rrf_k: int = 60) -> list[Hit]:
         n = len(self.clauses)

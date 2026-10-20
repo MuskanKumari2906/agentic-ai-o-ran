@@ -6,7 +6,11 @@ export async function get<T = any>(path: string): Promise<T> {
 
 export async function post<T = any>(path: string, body: unknown = {}): Promise<T> {
   const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-  if (!r.ok) throw new Error(`${r.status} ${path}`);
+  if (!r.ok) {
+    let msg = `${r.status} ${path}`;
+    try { const j = await r.json(); if (j.detail) msg = j.detail; } catch {}
+    throw new Error(msg);
+  }
   return r.json();
 }
 

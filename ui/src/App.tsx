@@ -37,7 +37,8 @@ export default function App() {
 
   const go = (p: string, f?: any) => { setFocus(f || null); setPage(p); };
   const models: string[] = meta?.models || [];
-  const llmOk = models.some((m) => m.startsWith("qwen2.5"));
+  const backend = meta?.backend;
+  const llmOk = !!backend && backend.kind !== "replay";
 
   return (
     <div className="shell">
@@ -53,7 +54,7 @@ export default function App() {
         {prog?.phase && prog.phase !== "finished" && (
           <span className="pill" title={prog.last}>Experiments {prog.phase}: {prog.phase_done}/{prog.phase_total}</span>
         )}
-        <span className={"pill " + (llmOk ? "ok" : "bad")}>{llmOk ? "LLM: qwen2.5-7b (local)" : "LLM offline"}</span>
+        <span className={"pill " + (llmOk ? "ok" : "")} title={llmOk ? "Live assessments available" : "Recorded runs are replayed; live assessments need Ollama or an API key"}>{backend ? (llmOk ? `LLM: ${backend.label}` : backend.label) : "..."}</span>
       </div>
       <nav className="nav">
         {PAGES.map((g) => (

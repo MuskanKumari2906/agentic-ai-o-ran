@@ -24,7 +24,7 @@ export default function Compliance({ meta, focus }: { meta: any; focus: any }) {
   }, [cid]);
   useEffect(() => {
     const r = recorded.filter((x) => x.arm === arm && (x.rep ?? 0) === 0)[0];
-    if (!job) setRun(r || null);
+    if (!job || job.status === "error") setRun(r || null);
   }, [recorded, arm]);
 
   useEffect(() => {
@@ -38,9 +38,13 @@ export default function Compliance({ meta, focus }: { meta: any; focus: any }) {
   }, [job?.id, job?.status]);
 
   const runLive = async () => {
-    setRun(null);
-    const r = await post("/api/assess", { config_id: cid, arm });
-    setJob({ id: r.job, status: "running", events: [] });
+    try {
+      const r = await post("/api/assess", { config_id: cid, arm });
+      setRun(null);
+      setJob({ id: r.job, status: "running", events: [] });
+    } catch (e: any) {
+      setJob({ id: "", status: "error", error: e.message });
+    }
   };
 
   const filtered = list.filter((d) => cat === "all" || d.category === cat);
@@ -111,7 +115,7 @@ export default function Compliance({ meta, focus }: { meta: any; focus: any }) {
           </div>
           <div className="pb scroll" style={{ maxHeight: "calc(100vh - 150px)" }}>
             {job?.status === "running" && <LiveEvents events={job.events || []} />}
-            {job?.status === "error" && <div className="st crit">{job.error}</div>}
+            {job?.status === "error" && <div className="note" style={{ marginBottom: 10, color: "var(--warn)" }}>{job.error}</div>}
             {run ? <Trace run={run} item={item} live={!!job} /> : job?.status !== "running" && (
               <div className="empty">No recorded run of {arm} on this configuration yet. Press "Run live" to assess it now with the local LLM.</div>
             )}

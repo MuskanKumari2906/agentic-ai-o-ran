@@ -35,23 +35,16 @@ retrieval, on a single RTX 4060 (8 GB).
 
 Full write-up: `docs/SecTwin_Implementation_Report.pdf`; tables: `docs/RESULTS_TABLES.md`.
 
-## Quick start
+## Quick start (demo, no GPU needed)
 
-```bash
-# 1. LLM runtime (local)
-bash scripts/serve_ollama.sh            # or start the Ollama app
-ollama pull qwen2.5:7b-instruct && ollama pull llama3.1:8b && ollama pull nomic-embed-text
+New to the project? Read **[docs/HOW_TO_DEMO.md](docs/HOW_TO_DEMO.md)** first. Installation for any
+laptop: **[docs/INSTALL.md](docs/INSTALL.md)**.
 
-# 2. Python deps (Python 3.11+)
-pip install fastapi uvicorn httpx pydantic rapidfuzz rank-bm25 z3-solver numpy pandas pyarrow gymnasium stable-baselines3
+* Windows: double-click `setup.bat` once, then `run_demo.bat`. The dashboard opens at http://localhost:8600.
+* macOS / Linux: `bash run_demo.sh`.
 
-# 3. Dashboard (build once)
-cd ui && npm install && npm run build && cd ..
-
-# 4. Run
-python -m uvicorn sectwin.api.server:app --port 8600
-# open http://localhost:8600
-```
+The demo replays recorded results, so it needs only Python. Live AI assessments use, in order: a local
+GPU with Ollama, an API key (`ANTHROPIC_API_KEY`), or Ollama on CPU.
 
 Reproduce the study:
 
@@ -79,7 +72,7 @@ python -m sectwin.eval.analyze                      # results/summary.json
 | `sectwin/eval/` | metrics, metamorphic and poisoning variants, experiment runner, twin experiments, analysis |
 | `sectwin/api/` | FastAPI backend, hash-chained audit log |
 | `ui/` | React + TypeScript dashboard |
-| `docs/` | `DESIGN.md`, `BUILD_LOG.md`, `RESULTS.md` |
+| `docs/` | `HOW_TO_DEMO.md`, `INSTALL.md`, `DESIGN.md`, `BUILD_LOG.md`, report (`.docx`, `.pdf`), `RESULTS_TABLES.md` |
 
 ## What is real and what is not
 

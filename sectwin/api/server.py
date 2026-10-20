@@ -19,7 +19,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from ..agents.llm import available_models
+from ..agents.backend import resolve
+from ..agents.llm import PRIMARY_MODEL, available_models
 from ..agents.pipeline import ARM_LABEL, ARMS, Pipeline, security_excerpt
 from ..conf.patch import unified_diff, apply_fixes
 from ..conf.security import PROFILES, Profile, SECURITY_PARAMS, evaluate_text, security_view, summarize
@@ -41,12 +42,20 @@ _pipe: Pipeline | None = None
 _pipe_lock = threading.Lock()
 
 
+def llm_available() -> bool:
+    """True when some LLM backend is usable (GPU Ollama, API key, or CPU Ollama). The demo works without
+    one (recorded runs are replayed); only live assessments need it."""
+    return resolve()["kind"] != "replay"
+
+
 def pipeline() -> Pipeline:
     global _pipe
     with _pipe_lock:
         if _pipe is None:
             from ..retrieval.index import ClauseIndex
-            _pipe = Pipeline(ClauseIndex(), manifest=manifest())
+            b = resolve()
+            _pipe = Pipeline(ClauseIndex(use_dense=b["embeddings"]), model=b["model"] or PRIMARY_MODEL,
+                             critic_model=b["critic"] or PRIMARY_MODEL, manifest=manifest())
         return _pipe
 
 
@@ -55,7 +64,7 @@ def pipeline() -> Pipeline:
 def meta():
     return {"arms": [{"id": a, "label": ARM_LABEL[a]} for a in ARMS], "params": SECURITY_PARAMS,
             "profiles": [asdict(p) | {"key": p.key(), "describe": p.describe()} for p in PROFILES],
-            "models": available_models()}
+            "models": available_models(), "backend": resolve(force_refresh=True)}
 
 
 @app.get("/api/dataset")
@@ -96,6 +105,9 @@ def assess(req: AssessReq):
     d = BY_ID.get(req.config_id)
     if not d:
         raise HTTPException(404)
+    if req.arm != "A0" and not llm_available():
+        raise HTTPException(503, "No LLM backend is available, so recorded runs are shown instead. To run live, "
+                                 "start Ollama or set ANTHROPIC_API_KEY (see docs/INSTALL.md) and restart.")
     prof = Profile(**(req.profile or d["profile"]))
     jid = uuid.uuid4().hex[:10]
     job = {"id": jid, "status": "running", "events": [], "result": None, "config_id": req.config_id,
@@ -194,16 +206,25 @@ class TwinRunner:
     def start(self, scen: dict, mode: str):
         self.stop()
         cfg = ScenarioConfig(**scen)
-        live = mode == "live"
+        live = mode == "live" and llm_available()
         agent = ComplianceService(cfg.arm, mode="live" if live else "replay",
                                   replay=None if live else load_replay(),
-                                  pipeline=pipeline(), approval_delay_s=cfg.approval_delay_s)
+                                  pipeline=pipeline() if (live or llm_available()) else None,
+                                  approval_delay_s=cfg.approval_delay_s)
         pol = {"immediate": ImmediatePolicy(), "window": WindowPolicy(*cfg.window_hours),
                "none": NoRemediation()}.get(cfg.remediation_policy)
+        rl_note = None
         if cfg.remediation_policy == "rl":
-            from ..rl.policy import RLPolicy
-            pol = RLPolicy.load()
-        self.twin = Twin(cfg, DATA, agent=agent, policy=pol)
+            try:
+                from ..rl.policy import RLPolicy
+                pol = RLPolicy.load()
+            except ImportError:
+                pol = ImmediatePolicy()   # RL extras not installed (requirements-research.txt)
+                rl_note = "RL scheduler needs requirements-research.txt; using immediate remediation"
+        # config drift draws from the test split, which has measured agent runs to replay
+        self.twin = Twin(cfg, [d for d in DATA if d["split"] == "test"], agent=agent, policy=pol)
+        if rl_note:
+            self.twin.log("notice", None, reason=rl_note)
         self.scenario = scen | {"mode": mode}
         self.running, self.paused = True, False
         self.thread = threading.Thread(target=self._loop, daemon=True)
