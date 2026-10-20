@@ -21,6 +21,20 @@ Compliance in O-RAN"*. It has four parts:
 Everything runs locally: Qwen2.5-7B-Instruct and Llama-3.1-8B through Ollama, nomic-embed-text for
 retrieval, on a single RTX 4060 (8 GB).
 
+## Headline results (pilot scale, local 7B model)
+
+| Finding | Evidence |
+|---|---|
+| Verifier-grounded reflection beats agentic RAG and LLM-only reflection | A5 vs A3: 18 vs 0 configs (p < 0.001); A5 vs A4: 15 vs 2 (p = 0.002) |
+| The deterministic verifier carries the gain; the LLM critic adds little | A6 vs A3: 15 vs 0; A5 vs A6 not resolved (p = 0.25); cross-family critic: 1.4% of claims pass |
+| SMT repair turns findings into safer fixes | fix correctness 21% to 38%; unnecessary changes 73% to 29%; in the twin 72% fewer users displaced |
+| Wrong automatic fixes are worse than none | twin: LLM-written fixes 52 vs 40 non-compliant site-hours with no agent |
+| Provenance checks stop poisoned clauses | tampered-clause citations: A3/A4 3 each, A5 0 |
+| RL schedules remediation better than fixed rules | +11.5 reward vs best rule (95% CI 8.3-14.9) over 200 paired days |
+| Twin radio model is consistent with ns-3 5G-LENA at the median | median SINR 3.9 dB vs 4.6-5.6 dB; tails differ (documented) |
+
+Full write-up: `docs/SecTwin_Implementation_Report.pdf`; tables: `docs/RESULTS_TABLES.md`.
+
 ## Quick start
 
 ```bash

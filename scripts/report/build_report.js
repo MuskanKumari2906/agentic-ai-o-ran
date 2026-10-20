@@ -116,8 +116,8 @@ if (e1.arms) {
   const rows = ORDER.filter((a) => e1.arms[a]).map((a) => { const r = e1.arms[a]; const ci = r.f1_ci || [null, null];
     return [a, r.n, pct(r.config_accuracy), pct(r.exact_match), fx(r.precision), fx(r.recall), `${fx(r.f1)} [${fx(ci[0])}, ${fx(ci[1])}]`,
       pct(r.citation_correct), pct(r.fix_correct), pct(r.unnecessary_change_rate), ["A4", "A5", "A6", "A7", "A5x"].includes(a) ? `${r.wrong_to_right}/${r.right_to_wrong}` : "-", r.seconds_mean.toFixed(0)]; });
-  body.push(table(["Arm", "Runs", "Cfg acc.", "Exact", "Prec.", "Rec.", "F1 [95% CI]", "Cite ok", "Fix ok", "Unneeded", "Flips W>R/R>W", "s"], rows,
-    [520, 520, 720, 680, 600, 600, 1400, 760, 720, 840, 1006, 660]));
+  body.push(table(["Arm", "Runs", "Cfg acc.", "Exact", "Prec.", "Rec.", "F1 [95% CI]", "Cite ok", "Fix ok", "Unneeded", "Flips W>R / R>W", "s"], rows,
+    [520, 640, 720, 680, 600, 600, 1360, 760, 720, 960, 866, 600]));
   body.push(Cap("Table 3. E1 on the held-out test split. Fix ok is measured on non-compliant files, Unneeded on compliant files."));
   const f = img("e1_quality.png", 600, 221); if (f) { body.push(f); body.push(Cap("Figure 1. Detection quality by arm.")); }
   const g = img("e1_categories.png", 470, 220); if (g) { body.push(g); body.push(Cap("Figure 2. Exact-match accuracy by configuration category.")); }

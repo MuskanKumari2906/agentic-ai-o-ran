@@ -123,3 +123,16 @@ Problems found in smoke tests and fixed:
 - **E4 result:** LLM-written fixes (A3/A4) leave gNBs non-compliant longer than no agent (52 vs 40 site-h);
   A7 (SMT repair) lowest LLM-arm non-compliance (25 site-h) and 72% fewer users displaced than A5.
 - Repository: all work committed as MuskanKumari2906 and pushed to MuskanKumari2906/agentic-ai-o-ran.
+
+## Entry 8: final results (02:30-06:00, 20 Oct)
+
+- All experiment phases finished at 05:43: E1 (two repeats, 9 arms incl. A5x), E2 (144 runs), E3 (36 runs).
+- Final E1 paired tests (exact-match, majority over repeats): A5 vs A3 18/0 (p < 0.001), A6 vs A3 15/0
+  (p < 0.001), A5 vs A4 15/2 (p = 0.002), A5 vs A0 15/3 (p = 0.008); A4 vs A3 5/0 (p = 0.06) and A5 vs A6
+  3/0 (p = 0.25) not resolved.
+- Cross-family critic (Llama-3.1-8B): 5 of 364 claims passed evidence checks (1.4%) vs 103/407 (25%) for the
+  Qwen critic; A5x behaves like A6. A5x timing is not comparable (Qwen calls served from cache).
+- Run-to-run stability: same verdict in both repeats for 82% of files (A3), 38% (A5), 16% (A4).
+- E2: comment prompt injection had no effect; harmless rewrites change LLM verdicts on 17-75% of files.
+- E3: provenance check stops tampered-clause citations (A3/A4 3 each, A5 0) and fails closed.
+- Final report: docs/SecTwin_Implementation_Report.docx and .pdf (9 pages).

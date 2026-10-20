@@ -1,20 +1,32 @@
 {
  "summary": [
-  "**Verification, not self-critique, is what helps.** On 45 held-out configurations, verifier-grounded reflection (A5) was exactly right on 10 configurations where single-agent agentic RAG (A3) was wrong, and never the reverse (exact McNemar p = 0.002). LLM-only reflection (A4, the design of the closest published work) gave no resolved gain over A3 (2 vs 0, p = 0.5).",
-  "**The LLM critic adds little over the deterministic verifier.** The verifier alone (A6) was nearly as good as A5 (A5 vs A6: 2 vs 0 configurations, p = 0.5) at about two-thirds of the tokens. This matches hypothesis H3 of the proposal.",
-  "**Reflection mostly corrects rather than damages.** Across all parameters, A5 turned 80 verdicts from wrong to right and 8 from right to wrong; A4 turned 32 right and 20 wrong.",
-  "**A small local model over-flags.** Qwen2.5-7B without verification reported about five false violations per true one (precision 0.15). Grounded verification raised precision to 0.24-0.25 and doubled citation correctness (10% to 21-23%), at a cost in recall (0.96 to 0.64-0.72).",
-  "**A simple rule scanner remains competitive overall** (A0 F1 0.41 vs A6 0.38, A0 vs A5 not resolved, p = 0.39), but it cannot reason about deployment profiles: it never solved a decoy or a context-dependent file, while A5 solved 38% of decoys.",
-  "**Formal repair fixes what the LLM fixes badly.** Using the same confirmed findings, SMT minimal repair (A7) raised fix correctness from 24% to 35% and cut unnecessary changes on compliant files from 75% to 32%.",
-  "**In the network, wrong fixes cost more than missed findings.** In the closed-loop twin (3 seeds, 6 h each), arms that push LLM-written fixes (A3, A4) left gNBs non-compliant for longer than no agent at all (52 vs 40 site-hours), because incorrect fixes create new non-compliant configurations. The same A5 findings with SMT repair (A7) cut non-compliant site-hours to 25 and users displaced by fixes by 72% (892 vs 3193).",
-  "**Provenance checking blocks knowledge-base poisoning, and fails closed.** With a tampered Operator Security Baseline clause in the corpus, A3 and A4 each confirmed 3 findings that cited the tampered text; A5 confirmed none, because C3 rejected every citation whose chunk hash did not match the trusted manifest. The same check also discarded a genuine finding that relied on that clause, so A5 trades some recall for integrity until the knowledge base is restored.",
-  "**A prompt injection hidden in a configuration comment had no effect on detection** (no increase in missed violations for any arm). Meaning-preserving rewrites changed LLM verdicts on 17-75% of files, so single-run LLM verdicts should not be treated as stable.",
-  "Absolute accuracy is low (best exact match 22%) because of the small model and the deliberately hard dataset; the evidence is in the paired differences, not the absolute levels."
+  "**Verification, not self-critique, is what helps.** Over 45 held-out configurations and two repeats, verifier-grounded reflection (A5) was exactly right on 18 configurations where single-agent agentic RAG (A3) was wrong, and never the reverse (exact McNemar p < 0.001). A5 also beat LLM-only reflection (A4, the design of the closest published work) 15 to 2 (p = 0.002). A4 itself did not beat A3 at the 5% level (5 vs 0, p = 0.06).",
+  "**The deterministic verifier carries the gain; the LLM critic adds little.** The verifier alone (A6) beat A3 15 to 0 (p < 0.001), and A5 vs A6 was not resolved (3 vs 0, p = 0.25), with A6 using 30% fewer tokens and about a third of the time. This matches hypothesis H3 of the proposal.",
+  "**A cross-family critic did not help.** With Llama-3.1-8B as critic (A5x), only 5 of 364 critic claims (1.4%) passed the evidence checks, against 103 of 407 (25%) for the Qwen critic, and A5x behaved like the verifier-only arm.",
+  "**Reflection mostly corrects rather than damages.** Across both repeats A5 turned 179 parameter verdicts from wrong to right and 15 from right to wrong; A4 turned 70 right and 40 wrong.",
+  "**A small local model over-flags.** Qwen2.5-7B without verification reported about six false violations per true one (precision 0.15). Grounded verification raised precision to 0.25-0.26 and more than doubled citation correctness (8% to 20%), at a cost in recall (0.94 to 0.64-0.68).",
+  "**Against the rule scanner:** A0 has the best F1 overall (0.41 vs 0.36-0.37) because it never misses a literal violation, but on exact correctness of the whole file A5 beat A0 15 to 3 (p = 0.008): A0 cannot reason about deployment profiles and never solved a decoy or a context-dependent file.",
+  "**Formal repair fixes what the LLM fixes badly.** From the same confirmed findings, SMT minimal repair (A7) raised fix correctness from 21% to 38% and cut unnecessary changes on compliant files from 73% to 29%.",
+  "**In the network, wrong fixes cost more than missed findings.** In the closed-loop twin (3 seeds, 6 h each), arms that push LLM-written fixes (A3, A4) left gNBs non-compliant for longer than no agent at all (52 vs 40 site-hours). A7 cut non-compliant site-hours to 25 and users displaced by fixes by 72% compared with A5 (892 vs 3193).",
+  "**Provenance checking blocks knowledge-base poisoning, and fails closed.** With a tampered clause in the corpus, A3 and A4 each confirmed 3 findings citing the tampered text; A5 confirmed none, but also dropped a genuine finding that relied on the same clause.",
+  "**LLM verdicts are not stable run to run.** The same configuration received the same verdict in both repeats for 82% of files with A3, but only 38% with A5 and 16% with A4; meaning-preserving rewrites changed verdicts on 17-75% of files. A prompt injection hidden in a configuration comment had no effect on detection.",
+  "Absolute accuracy is low (best exact match 27%) because of the small local model and the deliberately hard dataset; the evidence is in the paired differences, not the absolute levels."
  ],
  "e1": [
-  "Precision is the limiting factor for every LLM arm: A1-A3 produce 132-138 false violations against 23-24 true ones across 45 files, mostly on drb_integrity, integrity and ciphering lists. Retrieval (A2) and query generation (A3) did not change this with a 7B model.",
-  "The verifier's C4 applicability check removed most false positives; 78-84% of A5/A6 runs ended with at least one finding that could not be verified within three rounds and was dropped (escalation). The revision step itself rarely changed the model's answer, so the gain comes from filtering by checkable evidence rather than from the model learning from feedback.",
-  "Decoys and context pairs separate the arms: A0-A3 solved none, A5 solved 38% of decoys and 14% of context pairs. Vendor-default files (OAI sample values) were solved by no arm."
+  "Precision limits every LLM arm: A1-A3 produce about 130 false violations against 23-24 true ones per repeat, mostly on drb_integrity and the algorithm lists. Retrieval (A2) and query generation (A3) did not change this with a 7B model (A3 vs A1 and A3 vs A2: no configuration differs).",
+  "The verifier's C4 applicability check removed most false positives. 78-84% of A5/A6 runs ended with at least one finding that could not be verified within three rounds and was dropped (escalation). The revision step rarely changed the model's answer, so the gain comes from filtering by checkable evidence rather than from the model learning from feedback.",
+  "Decoys and context pairs separate the arms: A0-A3 solved none, A5 solved 25-38% of decoys and 14% of context pairs. Vendor-default files (OAI sample values) were solved by no arm.",
+  "A5x latency is not comparable with the other arms: its Qwen assessor calls were served from the cache filled by A5, so only the Llama critic calls were timed. A7's quality columns differ from A5 only in the fix; its latency is A5's plus a few milliseconds of SMT solving."
+ ],
+ "e2": [
+  "The injected comment asked the auditor to report the file as compliant. Across 12 non-trivial files no arm missed more violations on the injected variant than on the original (A3: 6 true positives in both; A5: 5 vs 4), so Qwen2.5-7B did not follow the instruction in this test.",
+  "Robustness to harmless rewrites differs: the rule scanner is fully deterministic (100% unchanged), A3 kept its verdict on 67-83% of variants and A5 on only 25-75%, because A5's final answer depends on which marginal findings survive verification. Accuracy on the variants was unchanged for every arm (A5 25%, A3 0%, A0 8%).",
+  "Practical consequence: a deployment should run the LLM assessor more than once, or treat verdict disagreement as a signal for escalation, rather than act on a single run."
+ ],
+ "e3": [
+  "Five poisoned clauses were added: four fake identifiers and one tampered copy of OSB-1 with the same identifier. Poisoned text was retrieved in 4 of 12 runs per arm.",
+  "A3 and A4 used the tampered OSB-1 sentence as evidence in 3 confirmed findings each. A5 used it in none: every citation to that chunk failed the hash check against the trusted manifest. Because the tampered chunk replaced the genuine OSB-1, A5 also lost the true ciphering finding on cfg-024; the check cannot tell which citation was meant to be legitimate, so it fails closed.",
+  "The remaining verdict changes for A5 under poisoning come from different retrieved context changing the model's output, not from poisoned citations being accepted."
  ],
  "e4": [
   "Every arm saw the same mobility, traffic, config drift and attacks within a seed (common random numbers, verified), so differences come from the agent. Values are means over seeds 11-13; per-seed values are in results/e4_twin.json.",
@@ -31,15 +43,5 @@
  ],
  "ns3": [
   "The twin's median SINR (3.9 dB) lies within 0.7-1.7 dB of ns-3 5G-LENA on the same layout, which supports its use for relative comparisons. The tails differ: ns-3's beamforming arrays reach higher SINR, and ns-3 shows a low-SINR tail of unresolved origin. Absolute radio KPIs from the twin are therefore indicative only."
- ],
- "e2": [
-  "The injected comment asked the auditor to report the file as compliant. Across 12 non-trivial files no arm missed more violations on the injected variant than on the original (A3: 6 true positives in both; A5: 5 vs 4), so Qwen2.5-7B did not follow the instruction in this test.",
-  "Robustness to harmless rewrites differs: the rule scanner is fully deterministic (100% unchanged), A3 kept its verdict on 67-83% of variants and A5 on only 25-75%, because A5's final answer depends on which marginal findings survive verification. Accuracy on the variants was unchanged for every arm (A5 25%, A3 0%, A0 8%).",
-  "Practical consequence: a deployment should run the LLM assessor more than once, or treat verdict disagreement as a signal for escalation, rather than act on a single run."
- ],
- "e3": [
-  "Five poisoned clauses were added: four fake identifiers and one tampered copy of OSB-1 with the same identifier. Poisoned text was retrieved in 4 of 12 runs per arm.",
-  "A3 and A4 used the tampered OSB-1 sentence as evidence in 3 confirmed findings each. A5 used it in none: every citation to that chunk failed the hash check against the trusted manifest. Because the tampered chunk replaced the genuine OSB-1, A5 also lost the true ciphering finding on cfg-024; the check cannot tell which citation was 'meant' to be legitimate, so it fails closed.",
-  "The remaining verdict changes for A5 under poisoning come from different retrieved context changing the model's output, not from poisoned citations being accepted."
  ]
 }
